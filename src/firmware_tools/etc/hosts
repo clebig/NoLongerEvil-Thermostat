@@ -1,0 +1,25 @@
+# IPv4 hosts
+127.0.0.1 localhost.localdomain localhost
+
+# IPv6 hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+# Nest domain redirects
+15.204.110.215 frontdoor.nest.com
+15.204.110.215 squeakydoor.nest.com
+15.204.110.215 home.nest.com
+15.204.110.215 logsink.devices.nest.com
+15.204.110.215 weather.nest.com
+15.204.110.215 time.nest.com
+15.204.110.215 czfe.nest.com
+15.204.110.215 transport.nest.com
+
+# Redirect Google domains used by Nest
+15.204.110.215 clients3.google.com
+15.204.110.215 clients.google.com
+15.204.110.215 www.google.com

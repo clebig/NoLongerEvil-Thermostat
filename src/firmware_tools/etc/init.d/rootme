@@ -1,0 +1,24 @@
+#!/bin/sh
+#Modified to replace CA certificate and redirect Nest domains
+
+mkdir /tmp/1
+mount /dev/mtdblock7 /tmp/1 -tjffs2
+
+# Copy modified hosts file from ramdisk to writable partition
+cp /etc/hosts /tmp/1/etc/hosts
+
+# Copy custom CA certificate from ramdisk to writable partition
+mkdir -p /tmp/1/nestlabs/share/certs
+mkdir -p /tmp/1/etc/ssl/certs
+cp /etc/ssl/certs/ca-bundle.pem /tmp/1/etc/ssl/certs/ca-bundle.pem
+cp /etc/ssl/certs/ca-bundle.pem /tmp/1/nestlabs/share/certs/ca-bundle.pem
+
+# Copy nolongerevil daemon to writable partition
+cp /bin/nolongerevil /tmp/1/bin/nolongerevil
+chmod +x /tmp/1/bin/nolongerevil
+
+# Add nolongerevil to startup script
+echo "/bin/nolongerevil" >> /tmp/1/etc/init.d/rcS
+
+umount /tmp/1
+reboot

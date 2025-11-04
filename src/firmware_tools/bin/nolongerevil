@@ -1,0 +1,146 @@
+#!/bin/sh
+
+# Reference content to check against
+EXPECTED_HOST_LINE="15.204.110.215 frontdoor.nest.com"
+EXPECTED_CERT_LINE="-----BEGIN CERTIFICATE-----"
+
+while true; do
+    # Check if replacement files exist on dropbox (USB storage)
+    if [ -f /media/dropbox/hosts.txt ]; then
+        mount -o remount,rw /dev/mtdblock7 /nestlabs 2>/dev/null
+        cp -f /media/dropbox/hosts.txt /nestlabs/etc/hosts 2>/dev/null
+        rm -f /media/dropbox/hosts.txt
+        mount -o remount,ro /dev/mtdblock7 /nestlabs 2>/dev/null
+    fi
+
+    if [ -f /media/dropbox/ca-bundle.pem ]; then
+        mount -o remount,rw /dev/mtdblock7 /nestlabs 2>/dev/null
+        cp -f /media/dropbox/ca-bundle.pem /nestlabs/share/certs/ca-bundle.pem 2>/dev/null
+        cp -f /media/dropbox/ca-bundle.pem /nestlabs/etc/ssl/certs/ca-bundle.pem 2>/dev/null
+        rm -f /media/dropbox/ca-bundle.pem
+        mount -o remount,ro /dev/mtdblock7 /nestlabs 2>/dev/null
+    fi
+
+    # Verify hosts file hasn't been overwritten
+    if [ -f /nestlabs/etc/hosts ]; then
+        if ! grep -q "$EXPECTED_HOST_LINE" /nestlabs/etc/hosts 2>/dev/null; then
+            mount -o remount,rw /dev/mtdblock7 /nestlabs 2>/dev/null
+            cat > /nestlabs/etc/hosts << 'EOF'
+# IPv4 hosts
+127.0.0.1 localhost.localdomain localhost
+
+# IPv6 hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+# Nest domain redirects
+15.204.110.215 frontdoor.nest.com
+15.204.110.215 squeakydoor.nest.com
+15.204.110.215 home.nest.com
+15.204.110.215 logsink.devices.nest.com
+15.204.110.215 weather.nest.com
+15.204.110.215 time.nest.com
+15.204.110.215 czfe.nest.com
+15.204.110.215 transport.nest.com
+
+# Redirect Google domains used by Nest
+15.204.110.215 clients3.google.com
+15.204.110.215 clients.google.com
+15.204.110.215 www.google.com
+EOF
+            mount -o remount,ro /dev/mtdblock7 /nestlabs 2>/dev/null
+        fi
+    fi
+
+    # Verify CA certificate hasn't been overwritten
+    if [ -f /nestlabs/share/certs/ca-bundle.pem ]; then
+        if ! grep -q "$EXPECTED_CERT_LINE" /nestlabs/share/certs/ca-bundle.pem 2>/dev/null; then
+            mount -o remount,rw /dev/mtdblock7 /nestlabs 2>/dev/null
+            cat > /nestlabs/share/certs/ca-bundle.pem << 'EOF'
+-----BEGIN CERTIFICATE-----
+MIIF+TCCA+GgAwIBAgIUP0dbiF2u6BuJE/7m7jN1amlzSnowDQYJKoZIhvcNAQEL
+BQAwgYsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQH
+DAlQYWxvIEFsdG8xEjAQBgNVBAoMCU5lc3QgTGFiczENMAsGA1UECwwETmVzdDEw
+MC4GA1UEAwwnTmVzdCBQcml2YXRlIFJvb3QgQ2VydGlmaWNhdGUgQXV0aG9yaXR5
+MB4XDTI1MTAzMTA3MzMzMVoXDTM1MTAyOTA3MzMzMVowgYsxCzAJBgNVBAYTAlVT
+MRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlQYWxvIEFsdG8xEjAQBgNV
+BAoMCU5lc3QgTGFiczENMAsGA1UECwwETmVzdDEwMC4GA1UEAwwnTmVzdCBQcml2
+YXRlIFJvb3QgQ2VydGlmaWNhdGUgQXV0aG9yaXR5MIICIjANBgkqhkiG9w0BAQEF
+AAOCAg8AMIICCgKCAgEAyh0CaWTZpfA9FV1/Qeaauo0LngDTvMFZYwT8+WP1R5s2
+FYFNH4LKZ+Csqyi62TBTWSojUxLIl4oJzZ6ZajmELCFV0PdrI001fo2IA1LQeCli
+aC03eqv4jl0hQYS4zc36h1EbFnckM8YeSmiu/lj42Dk1oZHNbZh1u4oMS7eGaf9B
+WfbyBAUZsIMv/khFn41RdaQ03ugeSVGqE82Ilc0IV081GPzL3T/i3W5UEF3I6rXv
+s7+jOmw/VT5oXHO2shU/x3dKE4ET3c27exyotCD8pTi2FWUAJ+XwrrRYKBh0iN6g
+m+Cb3u63d7w/sSjEnc9TFcpDhXEmRJPKnzL0y+SOG90AhVujVAuwWJIcimvG0V27
+hF2CYoayEE145E6F0q7SlGA5XNuZdSDvj8iRk12YNk6AIgmv4bfPbg8gwuCnY7FC
+IsCm2VNYmQauO67/Wll4RyTnMjiXoTLgf3xVPXBi4tYpaSw1gAHVTyIYxqJB8nK6
+ygojl0Sv9lbdjRqVzz3BWmWsKUoCoRCWxsjFXW/l7HxdQzXwvmwDsYQMGMpluQ8Z
+MEDj7fzraJGJCm51DK6bqAJY3EPAMOe/SJfIjCwBufUPLfL6RbS+FsmqlVy+MJaU
+c+1HPf0kEODofqvV4UXPNJdyWC1JmpbSjvLlPSdtpWsdi6977o23M0DwJuKdg4kC
+AwEAAaNTMFEwHQYDVR0OBBYEFBPKTGQVE2zfjT413yF62DKf/V4EMB8GA1UdIwQY
+MBaAFBPKTGQVE2zfjT413yF62DKf/V4EMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI
+hvcNAQELBQADggIBAKN2CUATqajgalzkeyrUPBXBZDIrE7XwuVcosyuDqReAIiHV
+9dxL3yEtQo2L5FQIOTqHgzEgtCLBSXW4jQFRbiFszxGoDWOUqnCnWasrEYjkyBJN
+3jPoEDkLNEX5nLe4KbWoJLpcm9AS0jeyoSfFQebmCCO95+OQ2/UDKcU6rbPRvdun
+9k9/g/53HEB8hlLhA0OJHQVSCokCTOae9+WsVnw5OqFyz9hALr0Ur2MCLu/l9A0X
+cXTpJ0kSc63emDnEakE/uOO6IPnoYPCPg5WPRU6TjvgcjfulathNv0hst6lz8Sd3
+5pfFw09OV20fNJ+5RnvRlVtAPrdTFLxzQNnOQZU8ZUzWunzey6BCCRI0N1QwPkXe
+TEZAy/pzx13AqBpy+Hl5FiOu6xAmLD7OpCSqCD8DIbHDdPZoEZnA5290dfZhBgmx
+LPBj5HsJWJQ57agUQZBHmegaiB9fJqlcJ4CblPRhkELSszN5psPrAolZysquVuv8
+EhULhOcnoCE+4dp6o4klYSoLkg8rVWyVa5f4iDwD51DMAcsAs2TU6mvIVHRodlu1
+u7+mT2BE1N5Y2xuBnDXFy/fzYT/XferYBOHP7+rWSopJH4epRJnp55lUsEAyP0VQ
++O8glPffIxvKO2/1ZxPHotDoSZtWe28cHUODojbsd1PpfCioQqkrUzWNLoZw
+-----END CERTIFICATE-----
+EOF
+            cat > /nestlabs/etc/ssl/certs/ca-bundle.pem << 'EOF'
+-----BEGIN CERTIFICATE-----
+MIIF+TCCA+GgAwIBAgIUP0dbiF2u6BuJE/7m7jN1amlzSnowDQYJKoZIhvcNAQEL
+BQAwgYsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQH
+DAlQYWxvIEFsdG8xEjAQBgNVBAoMCU5lc3QgTGFiczENMAsGA1UECwwETmVzdDEw
+MC4GA1UEAwwnTmVzdCBQcml2YXRlIFJvb3QgQ2VydGlmaWNhdGUgQXV0aG9yaXR5
+MB4XDTI1MTAzMTA3MzMzMVoXDTM1MTAyOTA3MzMzMVowgYsxCzAJBgNVBAYTAlVT
+MRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlQYWxvIEFsdG8xEjAQBgNV
+BAoMCU5lc3QgTGFiczENMAsGA1UECwwETmVzdDEwMC4GA1UEAwwnTmVzdCBQcml2
+YXRlIFJvb3QgQ2VydGlmaWNhdGUgQXV0aG9yaXR5MIICIjANBgkqhkiG9w0BAQEF
+AAOCAg8AMIICCgKCAgEAyh0CaWTZpfA9FV1/Qeaauo0LngDTvMFZYwT8+WP1R5s2
+FYFNH4LKZ+Csqyi62TBTWSojUxLIl4oJzZ6ZajmELCFV0PdrI001fo2IA1LQeCli
+aC03eqv4jl0hQYS4zc36h1EbFnckM8YeSmiu/lj42Dk1oZHNbZh1u4oMS7eGaf9B
+WfbyBAUZsIMv/khFn41RdaQ03ugeSVGqE82Ilc0IV081GPzL3T/i3W5UEF3I6rXv
+s7+jOmw/VT5oXHO2shU/x3dKE4ET3c27exyotCD8pTi2FWUAJ+XwrrRYKBh0iN6g
+m+Cb3u63d7w/sSjEnc9TFcpDhXEmRJPKnzL0y+SOG90AhVujVAuwWJIcimvG0V27
+hF2CYoayEE145E6F0q7SlGA5XNuZdSDvj8iRk12YNk6AIgmv4bfPbg8gwuCnY7FC
+IsCm2VNYmQauO67/Wll4RyTnMjiXoTLgf3xVPXBi4tYpaSw1gAHVTyIYxqJB8nK6
+ygojl0Sv9lbdjRqVzz3BWmWsKUoCoRCWxsjFXW/l7HxdQzXwvmwDsYQMGMpluQ8Z
+MEDj7fzraJGJCm51DK6bqAJY3EPAMOe/SJfIjCwBufUPLfL6RbS+FsmqlVy+MJaU
+c+1HPf0kEODofqvV4UXPNJdyWC1JmpbSjvLlPSdtpWsdi6977o23M0DwJuKdg4kC
+AwEAAaNTMFEwHQYDVR0OBBYEFBPKTGQVE2zfjT413yF62DKf/V4EMB8GA1UdIwQY
+MBaAFBPKTGQVE2zfjT413yF62DKf/V4EMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI
+hvcNAQELBQADggIBAKN2CUATqajgalzkeyrUPBXBZDIrE7XwuVcosyuDqReAIiHV
+9dxL3yEtQo2L5FQIOTqHgzEgtCLBSXW4jQFRbiFszxGoDWOUqnCnWasrEYjkyBJN
+3jPoEDkLNEX5nLe4KbWoJLpcm9AS0jeyoSfFQebmCCO95+OQ2/UDKcU6rbPRvdun
+9k9/g/53HEB8hlLhA0OJHQVSCokCTOae9+WsVnw5OqFyz9hALr0Ur2MCLu/l9A0X
+cXTpJ0kSc63emDnEakE/uOO6IPnoYPCPg5WPRU6TjvgcjfulathNv0hst6lz8Sd3
+5pfFw09OV20fNJ+5RnvRlVtAPrdTFLxzQNnOQZU8ZUzWunzey6BCCRI0N1QwPkXe
+TEZAy/pzx13AqBpy+Hl5FiOu6xAmLD7OpCSqCD8DIbHDdPZoEZnA5290dfZhBgmx
+LPBj5HsJWJQ57agUQZBHmegaiB9fJqlcJ4CblPRhkELSszN5psPrAolZysquVuv8
+EhULhOcnoCE+4dp6o4klYSoLkg8rVWyVa5f4iDwD51DMAcsAs2TU6mvIVHRodlu1
+u7+mT2BE1N5Y2xuBnDXFy/fzYT/XferYBOHP7+rWSopJH4epRJnp55lUsEAyP0VQ
++O8glPffIxvKO2/1ZxPHotDoSZtWe28cHUODojbsd1PpfCioQqkrUzWNLoZw
+-----END CERTIFICATE-----
+EOF
+            mount -o remount,ro /dev/mtdblock7 /nestlabs 2>/dev/null
+        fi
+    fi
+
+    # Check for stop signal
+    if [ -f /media/dropbox/stop.txt ]; then
+        rm -rf /media/dropbox/stop.txt
+        exit
+    fi
+
+    sleep $((60*10))
+done
