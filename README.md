@@ -1,3 +1,5 @@
+# This fork just add src/firmware_tools to help you to understand what really does this firmware
+
 # Nest Thermostat Firmware Setup
 
 > **⚠️ WARNING: EXPERIMENTAL SOFTWARE**
