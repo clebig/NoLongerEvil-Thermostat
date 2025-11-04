@@ -1,5 +1,3 @@
-# NoLongerEvil Firmware Analysis Files
-
 NoLongerEvil contains this statement:
 
 > "Open Source Commitment
